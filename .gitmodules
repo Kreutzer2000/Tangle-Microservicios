@@ -1,0 +1,3 @@
+[submodule "FrontendService/my-app"]
+	path = FrontendService/my-app
+	url = https://github.com/Kreutzer2000/my-app.git
