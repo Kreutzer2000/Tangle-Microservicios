@@ -1,0 +1,25 @@
+# Node modules en cada servicio
+**/node_modules
+
+# Archivos de entorno local en cada servicio
+**/.env.local
+**/.env.*.local
+
+# Archivos de logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# Directorios y archivos de editor
+**/.idea
+**/.vscode
+**/*.suo
+**/*.ntvs*
+**/*.njsproj
+**/*.sln
+**/*.sw?
+
+# Otros específicos de Vue.js
+.DS_Store
+/dist
