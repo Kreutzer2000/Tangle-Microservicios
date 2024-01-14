@@ -10,6 +10,8 @@ const app = express();
 app.use(cors()); // Habilitar CORS
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.json({ limit: '4gb' }));
+app.use(express.urlencoded({ limit: '4gb', extended: true }));
 
 app.post('/register', async (req, res) => {
     console.log("Solicitud recibida en /register");
@@ -21,33 +23,32 @@ app.post('/register', async (req, res) => {
     }
 
     const rawToken = generateRandomToken();
-
-    // Envía el token por correo electrónico
-    sendTokenByEmail(email, rawToken);
-
     const encryptedToken = encryptToken(rawToken);
 
     console.log('Token:', rawToken); // Token sin cifrar
     console.log('Encrypted Token:', encryptedToken); // Token cifrado
     
     // Espera a que cada campo sea cifrado antes de continuar
-    // const encryptedNombre = await encryptText(nombre);
-    // const encryptedApellido = await encryptText(apellido);
-    // const encryptedEmail = await encryptText(email);
-    // const encryptedUsuario = await encryptText(usuario);
-    // const encryptedContrasena = await encryptText(contrasena);
-    // const encryptedTelefono = await encryptText(telefono);
+    const encryptedNombre = await encryptText(String(nombre));
+    const encryptedApellido = await encryptText(String(apellido));
+    const encryptedEmail = await encryptText(String(email));
+    const encryptedUsuario = await encryptText(String(usuario));
+    const encryptedContrasena = await encryptText(String(contrasena));
+    const encryptedTelefono = await encryptText(String(telefono));
     
+    // Envía el token por correo electrónico
+    sendTokenByEmail(email, rawToken);
+
     try {
 
         const response = await axios.post(`${userServiceURL}/createUser`, {
             token: encryptedToken,
-            nombre: nombre,
-            apellido: apellido,
-            email: email,
-            usuario: usuario,
-            contrasena: contrasena,
-            numeroTelefono: telefono,
+            nombre: encryptedNombre,
+            apellido: encryptedApellido,
+            email: encryptedEmail,
+            usuario: encryptedUsuario,
+            contrasena: encryptedContrasena,
+            numeroTelefono: encryptedTelefono,
             activo: true
         });
 
@@ -57,7 +58,7 @@ app.post('/register', async (req, res) => {
             res.status(response.status).send('Error al registrar usuario');
         }
     } catch (err) {
-        console.error(err);
+        //console.error(err);
         sql.close();
         res.status(500).send('Error en el servidor');
     }
@@ -78,14 +79,17 @@ app.post('/login', async (req, res) => {
         console.log(user);
         if (user) {
             // Aquí asumimos que tus funciones de descifrado devuelven una promesa
-            //const nombreDescifrado = await decryptText(user.nombre);
-            // const apellidoDescifrado = await decryptText(user.apellido);
-            // const emailDescifrado = await decryptText(user.email);
-            // const usuarioDescifrado = await decryptText(user.usuario);
-            // const contrasenaDescifrada = await decryptText(user.contrasena);
-            //console.log(nombreDescifrado + '\n' );
-            if (user.contrasena === contrasena && user.usuario === usuario) {
-                const accessToken = generateAccessToken(user.usuario, user._id);
+            const nombreDescifrado = await decryptText(user.nombre);
+            const apellidoDescifrado = await decryptText(user.apellido);
+            const emailDescifrado = await decryptText(user.email);
+            const usuarioDescifrado = await decryptText(user.usuario);
+            const contrasenaDescifrada = await decryptText(user.contrasena);
+
+            const contrasenaString = String(contrasenaDescifrada); // Esto se utiliza para poder hacer una cadena todas las contraseñas y poder comparlas luego
+            
+            if ( /*user.contrasena*/ contrasenaString === contrasena && /*user.usuario*/usuarioDescifrado === usuario) {
+                console.log("Entro");
+                const accessToken = generateAccessToken(usuarioDescifrado, user._id);
                 console.log( accessToken + "Este es el token");
                 res.cookie('token', accessToken, { httpOnly: true });
                 return res.status(200).json({ message: 'Inicio de sesión exitoso', token: accessToken });

@@ -1,8 +1,15 @@
 const crypto = require('crypto');
 const axios = require('axios');
+const https = require('https');
 const jwt = require('jsonwebtoken');
+const encryptionServiceURL = 'https://localhost:7147';
 
-// Aquí trasladas funciones como generateRandomToken, encryptToken, sendTokenByEmail desde server.js
+// Crear una instancia de Axios con un agente HTTPS que ignora los errores de certificado SSL
+const axiosInstance = axios.create({
+    httpsAgent: new https.Agent({  
+        rejectUnauthorized: false
+    })
+});
 
 // Función para generar un token aleatorio
 function generateRandomToken() {
@@ -45,11 +52,37 @@ function generateAccessToken(username, userId) {  // Asegúrate de incluir userI
     return token;
 }
 
+async function encryptText(text) {
+    console.log('Request body for encryption:', text);
+    try {
+        const response = await axiosInstance.post(`${encryptionServiceURL}/Encryption/encrypt`, JSON.stringify(text), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        return response.data; // El texto cifrado
+    } catch (error) {
+        console.error('Error al encriptar el texto:', error);
+        throw error;
+    }
+}
+
+async function decryptText(encryptedText) {
+    try {
+        const response = await axiosInstance.post(`${encryptionServiceURL}/Encryption/decrypt`, JSON.stringify(encryptedText), { 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+        return response.data; // El texto desencriptado
+    } catch (error) {
+        console.error('Error al desencriptar el texto:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     generateRandomToken,
     encryptToken,
     sendTokenByEmail,
-    //encryptText
-    //decryptText
+    encryptText,
+    decryptText,
     generateAccessToken,
 };
