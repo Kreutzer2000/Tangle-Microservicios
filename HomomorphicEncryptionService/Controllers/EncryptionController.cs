@@ -126,31 +126,35 @@ namespace HomomorphicEncryptionService.Controllers
             {
                 byte[] bytes = Encoding.UTF8.GetBytes(plainText);
 
-                if (bytes.Length < 8)
+                // Asegúrate de que los datos sean del tamaño adecuado
+                if (bytes.Length % 8 != 0)
                 {
-                    byte[] padding = new byte[8 - bytes.Length];
-                    bytes = bytes.Concat(padding).ToArray();
+                    Array.Resize(ref bytes, bytes.Length + (8 - bytes.Length % 8));
                 }
 
-                long valorNumerico = BitConverter.ToInt64(bytes, 0);
+                StringBuilder encryptedString = new StringBuilder();
 
-                var textoplano = new Plaintext();
-                encoder.Encode(valorNumerico, textoplano);
-
-                var cipherText = new Ciphertext();
-                encryptor.Encrypt(textoplano, cipherText);
-
-                using (MemoryStream stream = new MemoryStream())
+                for (int i = 0; i < bytes.Length; i += 8)
                 {
-                    cipherText.Save(stream);
-                    string valorCipherText = Convert.ToBase64String(stream.ToArray());
-                    return valorCipherText;
+                    long valorNumerico = BitConverter.ToInt64(bytes, i);
+                    var textoplano = new Plaintext();
+                    encoder.Encode(valorNumerico, textoplano);
+                    var cipherText = new Ciphertext();
+                    encryptor.Encrypt(textoplano, cipherText);
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        cipherText.Save(stream);
+                        encryptedString.Append(Convert.ToBase64String(stream.ToArray()) + "|");
+                    }
                 }
+
+                return encryptedString.ToString().TrimEnd('|');
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                return plainText;
+                return StatusCode(500, "Error en la encriptación");
             }
         }
 
@@ -159,34 +163,36 @@ namespace HomomorphicEncryptionService.Controllers
         {
             try
             {
-                byte[] cipherBytes = Convert.FromBase64String(cipherTextString);
+                string[] encryptedBlocks = cipherTextString.Split('|');
+                byte[] decryptedBytes = new byte[encryptedBlocks.Length * 8];
 
-                using (MemoryStream stream = new MemoryStream(cipherBytes))
+                for (int i = 0; i < encryptedBlocks.Length; i++)
                 {
-                    var cipherText = new Ciphertext();
-                    cipherText.Load(context, stream);
-
-                    var plainText = new Plaintext();
-
-                    decryptor.Decrypt(cipherText, plainText);
-
-                    long valorNumerico = encoder.DecodeInt64(plainText);
-                    byte[] bytes = BitConverter.GetBytes(valorNumerico);
-
-                    // Los datos desencriptados pueden tener bytes nulos (0x00) al final debido al relleno.
-                    int nullTerminatorIndex = Array.IndexOf(bytes, (byte)0);
-                    if (nullTerminatorIndex >= 0)
+                    byte[] cipherBytes = Convert.FromBase64String(encryptedBlocks[i]);
+                    using (MemoryStream stream = new MemoryStream(cipherBytes))
                     {
-                        bytes = bytes.Take(nullTerminatorIndex).ToArray();
+                        var cipherText = new Ciphertext();
+                        cipherText.Load(context, stream);
+                        var plainText = new Plaintext();
+                        decryptor.Decrypt(cipherText, plainText);
+                        long valorNumerico = encoder.DecodeInt64(plainText);
+                        BitConverter.GetBytes(valorNumerico).CopyTo(decryptedBytes, i * 8);
                     }
-
-                    return Encoding.UTF8.GetString(bytes);
                 }
+
+                // Elimina el relleno al final
+                int nullIndex = Array.IndexOf(decryptedBytes, (byte)0);
+                if (nullIndex >= 0)
+                {
+                    Array.Resize(ref decryptedBytes, nullIndex);
+                }
+
+                return Encoding.UTF8.GetString(decryptedBytes);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error al desencriptar texto: {e.ToString()}");
-                return cipherTextString;
+                return StatusCode(500, "Error en el descifrado");
             }
         }
         

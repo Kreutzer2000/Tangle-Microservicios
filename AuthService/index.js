@@ -58,8 +58,7 @@ app.post('/register', async (req, res) => {
             res.status(response.status).send('Error al registrar usuario');
         }
     } catch (err) {
-        //console.error(err);
-        sql.close();
+        console.error(err);
         res.status(500).send('Error en el servidor');
     }
 });
@@ -76,12 +75,13 @@ app.post('/login', async (req, res) => {
         // Realiza una solicitud al UserService para obtener el usuario por token
         const userResponse = await axios.get(`${userServiceURL}/getUserByToken/${encryptedToken}`);
         const user = userResponse.data;
-        console.log(user);
+        //console.log(user);
+        //console.log(user._id);
         if (user) {
             // Aquí asumimos que tus funciones de descifrado devuelven una promesa
-            const nombreDescifrado = await decryptText(user.nombre);
-            const apellidoDescifrado = await decryptText(user.apellido);
-            const emailDescifrado = await decryptText(user.email);
+            // const nombreDescifrado = await decryptText(user.nombre);
+            // const apellidoDescifrado = await decryptText(user.apellido);
+            // const emailDescifrado = await decryptText(user.email);
             const usuarioDescifrado = await decryptText(user.usuario);
             const contrasenaDescifrada = await decryptText(user.contrasena);
 
@@ -92,7 +92,12 @@ app.post('/login', async (req, res) => {
                 const accessToken = generateAccessToken(usuarioDescifrado, user._id);
                 console.log( accessToken + "Este es el token");
                 res.cookie('token', accessToken, { httpOnly: true });
-                return res.status(200).json({ message: 'Inicio de sesión exitoso', token: accessToken });
+                console.log(user._id + "Este es el id del usuario")
+                return res.status(200).json({ 
+                    message: 'Inicio de sesión exitoso', 
+                    token: accessToken,
+                    userId: user._id  // Envía el _id del usuario
+                });
             } else {
                 return res.status(401).json({ message: 'Credenciales inválidas' });
             }
@@ -102,7 +107,6 @@ app.post('/login', async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        sql.close();
         res.status(err.response?.status || 500).json({ message: err.message || 'Error en el servidor' });
     }
 });
