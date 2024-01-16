@@ -1,5 +1,6 @@
 const express = require('express');
-const { Client, hexToUtf8, utf8ToHex, Utils, TaggedDataPayload } = require('@iota/sdk');
+const cors = require('cors');
+const { Client, Block, hexToUtf8, utf8ToHex, Utils, TaggedDataPayload } = require('@iota/sdk');
 const connectDB = require('./db');
 const TransaccionesTangle = require('./models/TransaccionesTangle'); // Asegúrate de ajustar la ruta
 const axios = require('axios');
@@ -7,6 +8,9 @@ const userServiceURL = 'http://localhost:3001';
 
 const app = express();
 app.use(express.json());
+
+// Habilitar CORS para todas las rutas
+app.use(cors());
 
 connectDB();
 
@@ -17,6 +21,8 @@ const client = new Client({
 
 app.post('/upload', async (req, res) => {
     const { hash, usuarioId, azureBlobUrl } = req.body;
+    console.log(usuarioId + '\n' + "Este es el usuario");
+    console.log(azureBlobUrl + '\n' + "Esta es la url");
     console.log(hash + '\n' + "Este es el hash");
     if (!hash || !usuarioId) {
         return res.status(400).send('Faltan datos requeridos');
