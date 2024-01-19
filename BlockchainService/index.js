@@ -16,8 +16,17 @@ connectDB();
 
 // Creación del cliente de IOTA
 const client = new Client({
+    //nodes: ['https://api.testnet.shimmer.network'],
     nodes: ['http://35.194.18.16:14265']
 });
+
+const clients = [
+    new Client({ nodes: ['http://35.194.18.16:14265'] }), // Nodo 1
+    new Client({ nodes: ['http://35.194.18.16:14266'] }), // Nodo 2
+    new Client({ nodes: ['http://35.194.18.16:14267'] }), // Nodo 3
+    new Client({ nodes: ['http://35.194.18.16:14268'] }),  // Nodo 4
+    new Client({ nodes: ['https://api.testnet.shimmer.network'] })  // Nodo de Pruebas
+];
 
 app.post('/upload', async (req, res) => {
     const { hash, usuarioId, azureBlobUrl } = req.body;
@@ -76,10 +85,13 @@ app.post('/upload', async (req, res) => {
 });
 
 app.get('/retrieve/:blockId', async (req, res) => {
+    console.log("Entro a retrieve");
     const blockId = req.params.blockId;
+    console.log(blockId + '\n' + "Este es el blockId");
 
     try {
-        const transaccion = await TransaccionesTangle.findOne({ blockId }).populate('usuarioId');
+        //const transaccion = await TransaccionesTangle.findOne({ blockId }).populate('usuarioId');
+        const transaccion = await TransaccionesTangle.findOne({ blockId });
         if (!transaccion) {
             return res.status(404).send('Transacción no encontrada');
         }

@@ -124,10 +124,37 @@ app.get('/getUserInfo/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
         const user = await Usuario.findById(userId).select('-contrasena -token'); // Excluye campos sensibles
+
         if (!user) {
             return res.status(404).send('Usuario no encontrado');
         }
-        res.json(user);
+
+        // Desencriptar los datos antes de enviarlos de vuelta al cliente
+        let nombreDescifrado, apellidoDescifrado, emailDescifrado, usuarioDescifrado, numeroTelefonoDescifrado = null;
+
+        if(user.nombre) nombreDescifrado = await decryptText(user.nombre);
+        if(user.apellido) apellidoDescifrado = await decryptText(user.apellido);
+        if(user.email) emailDescifrado = await decryptText(user.email);
+        if(user.usuario) usuarioDescifrado = await decryptText(user.usuario);
+        // console.log(usuarioDescifrado);
+        if (user.numeroTelefono && user.numeroTelefono.length > 0) {
+            try {
+                numeroTelefonoDescifrado = await decryptText(user.numeroTelefono);
+            } catch (error) {
+                console.error('Error al desencriptar el número de teléfono:', error.message);
+            }
+        }
+
+        const userDescifrado = new Usuario({
+            nombre: nombreDescifrado,
+            apellido: apellidoDescifrado,
+            email: emailDescifrado,
+            usuario: usuarioDescifrado,
+            numeroTelefono: numeroTelefonoDescifrado,
+        });
+        
+        console.log(userDescifrado);
+        res.json(userDescifrado);
     } catch (err) {
         console.error(err);
         res.status(500).send('Error en el servidor');
@@ -167,6 +194,41 @@ app.get('/getUserByToken/:token', async (req, res) => {
             return res.status(404).send('Usuario no encontrado');
         }
         res.json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error en el servidor');
+    }
+});
+
+// Nuevo endpoint para obtener todos los usuarios
+app.get('/getAllUsers', async (req, res) => {
+    try {
+        const users = await Usuario.find({}).select('-contrasena -token'); // Excluye campos sensibles
+        if (!users || users.length === 0) {
+            return res.status(404).send('No se encontraron usuarios');
+        }
+
+        // Desencriptar los datos de cada usuario
+        const usersDescifrados = await Promise.all(users.map(async (user) => {
+            let nombreDescifrado, apellidoDescifrado, emailDescifrado, usuarioDescifrado, numeroTelefonoDescifrado = null;
+
+            if(user.nombre) nombreDescifrado = await decryptText(user.nombre);
+            if(user.apellido) apellidoDescifrado = await decryptText(user.apellido);
+            if(user.email) emailDescifrado = await decryptText(user.email);
+            if(user.usuario) usuarioDescifrado = await decryptText(user.usuario);
+            if(user.numeroTelefono) numeroTelefonoDescifrado = await decryptText(user.numeroTelefono);
+
+            return {
+                ...user.toObject(), // Convertir a objeto plano y mantener los campos existentes
+                nombre: nombreDescifrado,
+                apellido: apellidoDescifrado,
+                email: emailDescifrado,
+                usuario: usuarioDescifrado,
+                numeroTelefono: numeroTelefonoDescifrado
+            };
+        }));
+        console.log(usersDescifrados);
+        res.json(usersDescifrados);
     } catch (err) {
         console.error(err);
         res.status(500).send('Error en el servidor');
