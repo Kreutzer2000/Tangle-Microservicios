@@ -124,6 +124,68 @@ app.get('/retrieve/:blockId', async (req, res) => {
     }
 });
 
+app.get('/retrieveByPhone/:phone/:userId', async (req, res) => {
+    console.log("Entro a retrieveByPhone");
+    const { phone, userId } = req.params;
+    console.log(phone + '\n' + "Este es el phone" + '\n' + userId + '\n' + "Este es el userId");
+    try {
+        // Obtener los detalles del usuario del otro microservicio
+        const userInfoResponse = await axios.get(`${userServiceURL}/getUserInfo/${userId}`);
+        const userInfo = userInfoResponse.data;
+        console.log(userInfo + '\n' + "Este es el userInfo");
+        // Verificar que el número de teléfono coincida
+        if (userInfo.numeroTelefono !== phone) {
+            return res.status(404).send('Número de teléfono no coincide con el usuario.');
+        }
+        
+        // Buscar transacciones en la base de datos para el usuarioId dado
+        const transacciones = await TransaccionesTangle.find({ usuarioId: userId });
+        console.log(transacciones + '\n' + "Estas son las transacciones");
+        if (!transacciones || transacciones.length === 0) {
+            console.log('No se encontraron transacciones para el usuario con ID:', userId);
+            return res.status(404).send('No se encontraron transacciones.');
+        }
+
+        // Procesar los resultados y enviarlos
+        const result = await Promise.all(transacciones.map(async transaccion => {
+            try {
+                // Recuperar el bloque desde la red Tangle usando la función existente
+                const fetchedBlock = await retrieveBlockFromNodesParallel(transaccion.blockId);
+
+                // Aquí puedes procesar fetchedBlock según sea necesario
+                // Por ejemplo, puedes convertir la información del bloque a un formato específico
+
+                return {
+                    dbData: {
+                        // datos relevantes de la transacción
+                        blockId: transaccion.blockId,
+                        hashSHA3: transaccion.hashSHA3,
+                        archivoCifradoURL: transaccion.archivoCifradoURL,
+                        fechaTransaccion: transaccion.fechaTransaccion,
+                        // ... otros datos de la transacción ...
+                    },
+                    userInfo: userInfo, // Agregar la información del usuario
+                    blockData: fetchedBlock // Agregar la información del bloque Tangle
+                };
+            } catch (error) {
+                console.error('Error al recuperar el bloque Tangle:', error);
+                return null; // O maneja el error como consideres adecuado
+            }
+        }));
+
+        const filteredResult = result.filter(item => item !== null); // Filtrar elementos nulos
+        console.log(filteredResult + '\n' + "Este es el filteredResult");
+        if (filteredResult.length > 0) {
+            res.json(filteredResult);
+        } else {
+            res.status(404).send('No se encontraron transacciones con los datos del bloque.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error del servidor');
+    }
+});
+
 const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
     console.log(`BlockchainService running on port ${PORT}`);
