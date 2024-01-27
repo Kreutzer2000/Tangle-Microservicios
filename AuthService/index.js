@@ -64,6 +64,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+    console.log("Solicitud recibida en /login")
     // Aquí trasladas la lógica para iniciar sesión desde server.js
     const { usuario, contrasena, token } = req.body;
     console.log('Received login request for user:', usuario);  // Añade un log aquí
