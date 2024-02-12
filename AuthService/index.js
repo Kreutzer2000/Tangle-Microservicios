@@ -5,9 +5,32 @@ const cookieParser = require('cookie-parser');
 const { generateRandomToken, encryptToken, sendTokenByEmail, encryptText, decryptText, generateAccessToken } = require('./authUtils');
 const axios = require('axios');
 
+// Lista de orígenes permitidos
+const whitelist = [
+    'http://localhost:3000', // Cliente de React
+    'https://localhost:7147', // Otro servicio
+    'http://localhost:8080',  // Cliente de Vue.js
+    'http://localhost:3001'   // Otro servicio
+];
+
+// Opciones de CORS
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (whitelist.indexOf(origin) !== -1 || !origin) {
+            // Origin está en la lista blanca o no se ha especificado (solicitudes sin servidor, p.ej. Postman)
+            console.log('Acceso permitido desde el siguiente origen:', origin);
+            callback(null, true);
+        } else {
+            console.log('Intento de acceso no autorizado desde el siguiente origen:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true, // Permitir envío de cookies y headers de autenticación
+};
+
 const userServiceURL = 'http://localhost:3001';
 const app = express();
-app.use(cors()); // Habilitar CORS
+app.use(cors(corsOptions)); // Habilitar CORS
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.json({ limit: '4gb' }));

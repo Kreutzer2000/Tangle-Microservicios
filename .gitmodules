@@ -1,3 +1,9 @@
 [submodule "FrontendService/my-app"]
 	path = FrontendService/my-app
 	url = https://github.com/Kreutzer2000/my-app.git
+[submodule "AppAuthMiddleware/backend"]
+	path = AppAuthMiddleware/backend
+	url = https://github.com/Kreutzer2000/app-auth-middleware-backend.git
+[submodule "AppAuthMiddleware/frontend"]
+	path = AppAuthMiddleware/frontend
+	url = https://github.com/Kreutzer2000/app-auth-middleware-frontend.git
