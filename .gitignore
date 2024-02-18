@@ -23,3 +23,9 @@
 # Otros específicos de Vue.js
 .DS_Store
 /dist
+
+# Entornos virtuales de Python
+**/venv/
+**/env/
+**/__pycache__/
+*.pyc

@@ -19,6 +19,8 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_C
 app.use(cors());
 
 app.post('/uploadToAzure', upload.single('file'), async (req, res) => {
+    console.log("Entró al endpoint /uploadToAzure")
+    console.log("Este es el req.file: ", req.file);
     if (!req.file) {
         return res.status(400).send('No file uploaded');
     }
