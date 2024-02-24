@@ -11,7 +11,8 @@ app.use(express.json({ limit: '4gb' }));
 app.use(express.urlencoded({ limit: '4gb', extended: true }));
 
 app.use(cors({
-    origin: 'http://localhost:8080' // Asegúrate de cambiar esto según el origen de tus solicitudes
+    // origin: 'http://localhost:8080', // Asegúrate de cambiar esto según el origen de tus solicitudes
+    origin: 'http://tangleapp.luxen.club', // Dominio App Tangle
 }));
 
 connectDB();

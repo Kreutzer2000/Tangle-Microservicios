@@ -1,6 +1,6 @@
 const axios = require('axios');
 const https = require('https');
-const encryptionServiceURL = 'https://localhost:7147';
+const encryptionServiceURL = 'http://homomorphicencryptionservice.luxen.club';
 
 // Crear una instancia de Axios con un agente HTTPS que ignora los errores de certificado SSL
 const axiosInstance = axios.create({

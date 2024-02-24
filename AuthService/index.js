@@ -10,7 +10,10 @@ const whitelist = [
     'http://localhost:3000', // Cliente de React
     'https://localhost:7147', // Otro servicio
     'http://localhost:8080',  // Cliente de Vue.js
-    'http://localhost:3001'   // Otro servicio
+    'http://tangleapp.luxen.club', // Dominio App Tangle
+    'http://localhost:3001',   // Otro servicio
+    'http://authservice.luxen.club', // Dominio de authservice
+    'http://userservice.luxen.club' // Dominio de userservice
 ];
 
 // Opciones de CORS
@@ -35,6 +38,17 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.json({ limit: '4gb' }));
 app.use(express.urlencoded({ limit: '4gb', extended: true }));
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*"); // o en lugar de "*", especifica los dominios permitidos
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
+app.get('/', (req, res) => {
+  console.log("Solicitud recibida en /");
+  res.send('AuthService is running');
+});
 
 app.post('/register', async (req, res) => {
     console.log("Solicitud recibida en /register");

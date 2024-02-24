@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 const https = require('https');
 const jwt = require('jsonwebtoken');
-const encryptionServiceURL = 'https://localhost:7147';
+const encryptionServiceURL = 'http://homomorphicencryptionservice.luxen.club';
 
 // Crear una instancia de Axios con un agente HTTPS que ignora los errores de certificado SSL
 const axiosInstance = axios.create({
@@ -33,7 +33,7 @@ function encryptToken(token) {
 // Modificar la función sendTokenByEmail para usar EmailService
 async function sendTokenByEmail(email, token) {
     try {
-        await axios.post('http://localhost:3002/sendEmail', { email, token });
+        await axios.post('http://emailservice.luxen.club/sendEmail', { email, token });
         console.log('Email enviado con éxito');
     } catch (error) {
         console.error('Error al enviar el email:', error);

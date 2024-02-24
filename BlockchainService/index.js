@@ -17,14 +17,14 @@ connectDB();
 // Creación del cliente de IOTA
 const client = new Client({
     //nodes: ['https://api.testnet.shimmer.network'],
-    nodes: ['http://35.194.18.16:14265']
+    nodes: ['http://nodo-hornet-1-api.luxen.club']
 });
 
 const clients = [
-    new Client({ nodes: ['http://35.194.18.16:14265'] }), // Nodo 1
-    new Client({ nodes: ['http://35.194.18.16:14266'] }), // Nodo 2
-    new Client({ nodes: ['http://35.194.18.16:14267'] }), // Nodo 3
-    new Client({ nodes: ['http://35.194.18.16:14268'] }),  // Nodo 4
+    new Client({ nodes: ['http://nodo-hornet-1-api.luxen.club'] }), // Nodo 1
+    new Client({ nodes: ['http://nodo-hornet-2-api.luxen.club'] }), // Nodo 2
+    new Client({ nodes: ['http://nodo-hornet-3-api.luxen.club'] }), // Nodo 3
+    new Client({ nodes: ['http://nodo-hornet-4-api.luxen.club'] }),  // Nodo 4
     new Client({ nodes: ['https://api.testnet.shimmer.network'] })  // Nodo de Pruebas
 ];
 
