@@ -1,10 +1,11 @@
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
 const express = require('express');
 const cors = require('cors');
 const { Client, Block, hexToUtf8, utf8ToHex, Utils, TaggedDataPayload } = require('@iota/sdk');
 const connectDB = require('./db');
 const TransaccionesTangle = require('./models/TransaccionesTangle'); // Asegúrate de ajustar la ruta
 const axios = require('axios');
-const userServiceURL = 'http://localhost:3001';
+const userServiceURL = process.env.USER_SERVICE_URL;
 
 const app = express();
 app.use(express.json());
@@ -24,7 +25,7 @@ const clients = [
     new Client({ nodes: ['http://nodo-hornet-1-api.luxen.club'] }), // Nodo 1
     new Client({ nodes: ['http://nodo-hornet-2-api.luxen.club'] }), // Nodo 2
     new Client({ nodes: ['http://nodo-hornet-3-api.luxen.club'] }), // Nodo 3
-    new Client({ nodes: ['http://nodo-hornet-4-api.luxen.club'] }),  // Nodo 4
+    new Client({ nodes: ['http://nodo-hornet-4-api.luxen.club'] }), // Nodo 4
     new Client({ nodes: ['https://api.testnet.shimmer.network'] })  // Nodo de Pruebas
 ];
 
@@ -86,7 +87,7 @@ app.post('/upload', async (req, res) => {
 
 app.get('/retrieve/:blockId', async (req, res) => {
     console.log("Entro a retrieve");
-    const blockId = req.params.blockId;
+    const {blockId} = req.params.blockId;
     console.log(blockId + '\n' + "Este es el blockId");
 
     try {
@@ -103,7 +104,7 @@ app.get('/retrieve/:blockId', async (req, res) => {
             return res.status(400).send('Invalid block payload or block not found');
         }
 
-        const payload = fetchedBlock.payload;
+        const {payload} = fetchedBlock.payload;
         const encryptedFileDataBase64 = hexToUtf8(payload.data);
 
         // Solicitar información del usuario al UserService

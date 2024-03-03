@@ -1,12 +1,14 @@
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
 const crypto = require('crypto');
 const axios = require('axios');
 const https = require('https');
 const jwt = require('jsonwebtoken');
-const encryptionServiceURL = 'http://homomorphicencryptionservice.luxen.club';
+const encryptionServiceURL = process.env.ENCRYPTION_SERVICE_URL;
+const emailServiceURL = process.env.EMAIL_SERVICE_URL;
 
 // Crear una instancia de Axios con un agente HTTPS que ignora los errores de certificado SSL
 const axiosInstance = axios.create({
-    httpsAgent: new https.Agent({  
+    httpsAgent: new https.Agent({ 
         rejectUnauthorized: false
     })
 });
@@ -33,7 +35,7 @@ function encryptToken(token) {
 // Modificar la función sendTokenByEmail para usar EmailService
 async function sendTokenByEmail(email, token) {
     try {
-        await axios.post('http://emailservice.luxen.club/sendEmail', { email, token });
+        await axios.post(`${emailServiceURL}/sendEmail`, { email, token });
         console.log('Email enviado con éxito');
     } catch (error) {
         console.error('Error al enviar el email:', error);

@@ -1,3 +1,4 @@
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./db');
@@ -10,9 +11,16 @@ const app = express();
 app.use(express.json({ limit: '4gb' }));
 app.use(express.urlencoded({ limit: '4gb', extended: true }));
 
+const allowedOrigins = [process.env.APP_TANGLE_LOCAL, process.env.APP_TANGLE_DOMAIN];
+
 app.use(cors({
-    // origin: 'http://localhost:8080', // Asegúrate de cambiar esto según el origen de tus solicitudes
-    origin: 'http://tangleapp.luxen.club', // Dominio App Tangle
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true)
+        } else {
+            callback(new Error('CORS not allowed'))
+        }
+    }
 }));
 
 connectDB();
@@ -23,13 +31,13 @@ app.get('/getProfile', async (req, res) => {
         console.log(userId);
         const user = await Usuario.findById(userId).select('nombre apellido email usuario numeroTelefono');
         //console.log(user);
-        
+
         let nombreDescifrado, apellidoDescifrado, emailDescifrado, usuarioDescifrado, numeroTelefonoDescifrado = null;
 
-        if(user.nombre) nombreDescifrado = await decryptText(user.nombre);
-        if(user.apellido) apellidoDescifrado = await decryptText(user.apellido);
-        if(user.email) emailDescifrado = await decryptText(user.email);
-        if(user.usuario) usuarioDescifrado = await decryptText(user.usuario);
+        if (user.nombre) nombreDescifrado = await decryptText(user.nombre);
+        if (user.apellido) apellidoDescifrado = await decryptText(user.apellido);
+        if (user.email) emailDescifrado = await decryptText(user.email);
+        if (user.usuario) usuarioDescifrado = await decryptText(user.usuario);
         // console.log(usuarioDescifrado);
         if (user.numeroTelefono && user.numeroTelefono.length > 0) {
             try {
@@ -60,7 +68,7 @@ app.get('/getProfile', async (req, res) => {
 });
 
 app.post('/updateProfile', async (req, res) => {
-    
+
     try {
         const { userId, nombre, apellido, email, usuario, numeroTelefono } = req.body;
         console.log( userId, nombre, apellido, email, usuario, numeroTelefono);
@@ -93,10 +101,10 @@ app.post('/updateProfile', async (req, res) => {
         // Desencriptar los datos antes de enviarlos de vuelta al cliente
         let nombreDescifrado, apellidoDescifrado, emailDescifrado, usuarioDescifrado, numeroTelefonoDescifrado = null;
 
-        if(updatedUser.nombre) nombreDescifrado = await decryptText(updatedUser.nombre);
-        if(updatedUser.apellido) apellidoDescifrado = await decryptText(updatedUser.apellido);
-        if(updatedUser.email) emailDescifrado = await decryptText(updatedUser.email);
-        if(updatedUser.usuario) usuarioDescifrado = await decryptText(updatedUser.usuario);
+        if (updatedUser.nombre) nombreDescifrado = await decryptText(updatedUser.nombre);
+        if (updatedUser.apellido) apellidoDescifrado = await decryptText(updatedUser.apellido);
+        if (updatedUser.email) emailDescifrado = await decryptText(updatedUser.email);
+        if (updatedUser.usuario) usuarioDescifrado = await decryptText(updatedUser.usuario);
         // console.log(usuarioDescifrado);
         if (updatedUser.numeroTelefono && updatedUser.numeroTelefono.length > 0) {
             try {
@@ -133,10 +141,10 @@ app.get('/getUserInfo/:userId', async (req, res) => {
         // Desencriptar los datos antes de enviarlos de vuelta al cliente
         let nombreDescifrado, apellidoDescifrado, emailDescifrado, usuarioDescifrado, numeroTelefonoDescifrado = null;
 
-        if(user.nombre) nombreDescifrado = await decryptText(user.nombre);
-        if(user.apellido) apellidoDescifrado = await decryptText(user.apellido);
-        if(user.email) emailDescifrado = await decryptText(user.email);
-        if(user.usuario) usuarioDescifrado = await decryptText(user.usuario);
+        if (user.nombre) nombreDescifrado = await decryptText(user.nombre);
+        if (user.apellido) apellidoDescifrado = await decryptText(user.apellido);
+        if (user.email) emailDescifrado = await decryptText(user.email);
+        if (user.usuario) usuarioDescifrado = await decryptText(user.usuario);
         // console.log(usuarioDescifrado);
         if (user.numeroTelefono && user.numeroTelefono.length > 0) {
             try {
@@ -153,7 +161,7 @@ app.get('/getUserInfo/:userId', async (req, res) => {
             usuario: usuarioDescifrado,
             numeroTelefono: numeroTelefonoDescifrado,
         });
-        
+
         console.log(userDescifrado);
         res.json(userDescifrado);
     } catch (err) {
@@ -163,12 +171,14 @@ app.get('/getUserInfo/:userId', async (req, res) => {
 });
 
 app.post('/createUser', async (req, res) => {
+    console.log("Solicitud recibida en /register para UserService");
     // Lógica para crear un nuevo usuario
-    const { token, nombre, apellido, email, usuario, contrasena, numeroTelefono, activo } = req.body;
-
+    // const { token, nombre, apellido, email, usuario, contrasena, numeroTelefono, activo } = req.body;
+    const { faceId, nombre, apellido, email, usuario, contrasena, numeroTelefono, activo } = req.body;
+    console.log(faceId + "Este es el faceId");
     try {
         const nuevoUsuario = new Usuario({
-            token,
+            faceId,
             nombre,
             apellido,
             email,
@@ -213,11 +223,11 @@ app.get('/getAllUsers', async (req, res) => {
         const usersDescifrados = await Promise.all(users.map(async (user) => {
             let nombreDescifrado, apellidoDescifrado, emailDescifrado, usuarioDescifrado, numeroTelefonoDescifrado = null;
 
-            if(user.nombre) nombreDescifrado = await decryptText(user.nombre);
-            if(user.apellido) apellidoDescifrado = await decryptText(user.apellido);
-            if(user.email) emailDescifrado = await decryptText(user.email);
-            if(user.usuario) usuarioDescifrado = await decryptText(user.usuario);
-            if(user.numeroTelefono) numeroTelefonoDescifrado = await decryptText(user.numeroTelefono);
+            if (user.nombre) nombreDescifrado = await decryptText(user.nombre);
+            if (user.apellido) apellidoDescifrado = await decryptText(user.apellido);
+            if (user.email) emailDescifrado = await decryptText(user.email);
+            if (user.usuario) usuarioDescifrado = await decryptText(user.usuario);
+            if (user.numeroTelefono) numeroTelefonoDescifrado = await decryptText(user.numeroTelefono);
 
             return {
                 ...user.toObject(), // Convertir a objeto plano y mantener los campos existentes

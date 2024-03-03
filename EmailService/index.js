@@ -1,33 +1,23 @@
 // EmailService/index.js
-require('dotenv').config();
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}.secrets` });
 const express = require('express');
 const cors = require('cors');
-// const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 
 const app = express();
 app.use(cors()); // Habilitar CORS
 app.use(express.json());
 
-// Configuración del transportador SMTP para Outlook
-// let transporter = nodemailer.createTransport({
-//    host: 'smtp.ethereal.email',
-//    port: 587,
-//    auth: {
-//        user: 'sylvia7@ethereal.email',
-//        pass: '3UbwBw35wqahfDZ6g5'
-//    }
-// });
-
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Endpoint para enviar el token por correo electrónico
 app.post('/sendEmail', async (req, res) => {
-    const { email, token } = req.body; // Asumimos que el email y token son enviados en el cuerpo de la solicitud
-    console.log(email, "," ,token);
+    const { email, token } = req.body; 
+    console.log(email, ",", token);
 
     let message = {
-        from: 'rdipaolaj@outlook.com',
+        from: process.env.EMAIL_USER,
         to: email,
         subject: 'Tu Token de Logeo al Sistema',
         html: `
@@ -46,8 +36,7 @@ app.post('/sendEmail', async (req, res) => {
     };
 
     try {
-        // let info = await transporter.sendMail(mailOptions);
-	await sgMail.send(message);
+        await sgMail.send(message);
         console.log('Email enviado: ' + info.messageId);
         res.send('Email enviado con éxito');
     } catch (error) {

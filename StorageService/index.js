@@ -1,3 +1,4 @@
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -11,7 +12,7 @@ const upload = multer({
     limits: { fileSize: 200000 * 1024 } // Ejemplo para un límite de 200,000 KB (195 MB)
 });
 
-const AZURE_STORAGE_CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=tanglestore;AccountKey=ZTFvf57GOFp+IF1mEwwcbkJ1BYyYZm3+bTuxYDiVNbvAzKYfPEV5ZlDhzBk0+xuErUL8V53QpckE+AStfKK+xg==;EndpointSuffix=core.windows.net'; // Obtén esto desde el portal de Azure
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING; // Obtén esto desde el portal de Azure
 const containerName = 'storagetangle';
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
 
